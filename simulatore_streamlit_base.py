@@ -127,7 +127,7 @@ go_to_optimum = st.sidebar.button("Vai direttamente al risultato ottimizzato")
 
 st.header("1. IMPOSTA LE OFFERTE DELLE UNITA DI PRODUZIONE UP E LA DOMANDA TOTALE")
 st.markdown("""
-<span style='color:#2a9d8f'><b>Per modificare una UP, clicca direttamente sulla cella che vuoi cambiare, digita il dato e premi invio.<br>
+<span style='color:#2a9d8f'><b>Per modificare una UP, clicca direttamente sulla cella che vuoi cambiare, digita il dato e premi invio o usa i pulsanti + e -.<br>
 <span style='color:#e76f51'>L'aggiunta o la rimozione di UP non è consentita in questa versione.</span></b></span>
 """, unsafe_allow_html=True)
 
@@ -207,6 +207,12 @@ offers = [
     }
     for _, row in df.iterrows()
 ]
+
+# Controllo se la domanda supera la somma delle offerte
+total_supply = sum(o['q'] for o in offers)
+if demand > total_supply:
+    st.error(f"La somma delle quantità offerte dalle UP ({total_supply} MWh) è minore della domanda ({demand} MWh): il mercato non ha soluzione!")
+    st.stop()
 accepted_classic, marginal_price_classic = clear_market(offers, demand)
 classic_cost = demand * marginal_price_classic
 
@@ -274,7 +280,7 @@ if run_optimization and not go_to_optimum:
     <b>Legenda grafico ottimizzazione:</b><br>
     <span style='color:#888'><b>Grigio</b></span>: costo totale con mercato unico (PaC classico)<br>
     <span style='color:#f4a261'><b>Arancione</b></span>: costo totale per la combinazione attuale FCMT/FCMNT<br>
-    <span style='color:#2a9d8f'><b>Verde</b></span>: miglior costo trovato finora (ottimo parziale)
+    <span style='color:#2a9d8f'><b>Verde</b></span>: miglior costo trovato finora con combinazioni FCMT/FCMNT (ottimo parziale)
     </div>
     """, unsafe_allow_html=True)
     split, prices, cost, acc, history = decoupled_clearing_animated(offers, demand, step=step_opt, speed=speed_opt, animate=True, go_optimum=False)
