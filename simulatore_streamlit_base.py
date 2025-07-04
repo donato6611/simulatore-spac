@@ -186,10 +186,13 @@ if df['UP'].duplicated().any():
 
 
 
-demand = st.number_input("Domanda totale (MWh)", min_value=1.0, max_value=100.0, value=23.7, step=0.1)
+# RIMOSSA LA DOPPIA BARRA DELLA DOMANDA
+
 
 # Barra per la domanda totale (una sola volta)
-demand = st.number_input("Domanda totale (MWh)", min_value=1.0, max_value=100.0, value=23.7, step=0.1, key="domanda_totale")
+if 'demand' not in st.session_state:
+    st.session_state['demand'] = 23.7
+demand = st.number_input("Domanda totale (MWh)", min_value=1.0, max_value=100.0, value=st.session_state['demand'], step=0.1, key="domanda_totale")
 
 # Simulazione: usa sempre df corrente
 # Conversione colonne per compatibilità con funzioni esistenti
