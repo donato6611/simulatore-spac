@@ -189,7 +189,9 @@ if df['UP'].duplicated().any():
 # RIMOSSA LA DOPPIA BARRA DELLA DOMANDA
 
 
-# Barra per la domanda totale (una sola volta)
+
+# Barra per la domanda totale (una sola volta, subito dopo l'intestazione)
+st.subheader("Domanda totale (MWh)")
 if 'demand' not in st.session_state:
     st.session_state['demand'] = 23.7
 demand = st.number_input("Domanda totale (MWh)", min_value=1.0, max_value=100.0, value=st.session_state['demand'], step=0.1, key="domanda_totale")
