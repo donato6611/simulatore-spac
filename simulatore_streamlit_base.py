@@ -407,8 +407,6 @@ def plot_up_status_classic(offers, accepted_classic):
 
 
 
-st.subheader("Curva domanda/offerta - Mercato Unico (PaC classico)")
-
 # Usa solo la tabella interattiva (df) per tutte le visualizzazioni e simulazioni
 # Conversione colonne per compatibilità con funzioni esistenti (già fatto sopra, riutilizza la variabile offers)
 # Visualizzazione UP accettate/escluse nel mercato unico PRIMA della curva domanda/offerta
