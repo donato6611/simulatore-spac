@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patheffects as pe
 
 st.set_page_config(page_title="SPaCapp - Simulatore Base Disaccoppiamento", layout="centered")
-st.title("Simulatore Base Disaccoppiamento Mercato Elettrico con Segmented Pay as Clear (SPaC)")
+st.title("SPaCapp - Simulatore Base Disaccoppiamento Mercato Elettrico con Segmented Pay as Clear (SPaC)")
 st.markdown("""
 **Legenda:**
 - **UP**: Unità di Produzione (centrale, impianto o gruppo che offre energia sul mercato)
