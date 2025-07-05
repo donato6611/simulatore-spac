@@ -11,6 +11,10 @@ st.markdown("""
 - **UP**: Unità di Produzione (centrale, impianto o gruppo che offre energia sul mercato)
 - **FCMT**: Fonti con Costi Marginali Trascurabili (ad esempio rinnovabili o nucleare)
 - **FCMNT**: Fonti con Costi Marginali Non Trascurabili (ad esempio fossili)
+- **q (MWh)**: Quantità offerta
+- **p (€/MWh)**: Prezzo offerto
+
+
 
 Simulazione del clearing classico e disaccoppiato con visualizzazione delle UP accettate/escluse e delle curve domanda/offerta per FCMT e FCMNT.
 """)
