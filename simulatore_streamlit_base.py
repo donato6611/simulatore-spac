@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patheffects as pe
 
-st.set_page_config(page_title="SPaCapp - Simulatore Base Disaccoppiamento", layout="centered")
+st.set_page_config(page_title="Simulatore Base Disaccoppiamento", layout="centered")
 st.title("SPaCapp - Simulatore Base Disaccoppiamento Mercato Elettrico con Segmented Pay as Clear (SPaC)")
 st.markdown("""
 **Legenda:**
@@ -305,12 +305,36 @@ else:
 
 st.header("2. RISULTATI DELLA SIMULAZIONE: CONFRONTO TRA CLEARING CLASSICO E SPaC")
 
-# --- Tabella di confronto risultati ---
-import pandas as pd
+
+# --- Tabella di confronto risultati aggiornata ---
 tabella_confronto = pd.DataFrame({
-    "": ["Prezzo unitario (€/MWh)", "Costo totale (€)", "Domanda FCMT (MWh)", "Prezzo FCMT (€/MWh)", "Domanda FCMNT (MWh)", "Prezzo FCMNT (€/MWh)"],
-    "Clearing classico": [f"{marginal_price_classic:.2f}", f"{classic_cost:.0f}", f"{demand:.2f}", f"{marginal_price_classic:.2f}", "-", "-"],
-    "SPaC": [f"{weighted_price_spac:.2f}", f"{cost:.0f}", f"{split[0]:.2f}", f"{prices[0]:.2f}", f"{split[1]:.2f}", f"{prices[1]:.2f}"]
+    "": [
+        "Prezzo unitario (€/MWh)",
+        "Costo totale (€)",
+        "Domanda totale (MWh)",
+        "Domanda FCMT (MWh)",
+        "Prezzo FCMT (€/MWh)",
+        "Domanda FCMNT (MWh)",
+        "Prezzo FCMNT (€/MWh)"
+    ],
+    "Clearing classico": [
+        f"{marginal_price_classic:.2f}",
+        f"{classic_cost:.0f}",
+        f"{demand:.2f}",
+        "-",
+        "-",
+        "-",
+        "-"
+    ],
+    "SPaC": [
+        f"{weighted_price_spac:.2f}",
+        f"{cost:.0f}",
+        f"{demand:.2f}",
+        f"{split[0]:.2f}",
+        f"{prices[0]:.2f}",
+        f"{split[1]:.2f}",
+        f"{prices[1]:.2f}"
+    ]
 })
 st.table(tabella_confronto.set_index("").style.set_properties(**{"text-align": "center"}))
 
