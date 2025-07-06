@@ -7,8 +7,12 @@ import numpy as np
 def plot_offers_summary(df):
     import matplotlib.pyplot as plt
     import matplotlib.patheffects as pe
-    # Forza font grande SOLO per questo grafico, senza toccare il default globale
-    fig, ax1 = plt.subplots(figsize=(max(22, 2.5*len(df)), 11))
+    # Dimensione dinamica e font adattivi migliorati
+    n_up = len(df)
+    width = min(max(8, 1.18*n_up), 12.5)
+    font_scale = max(0.88, min(1.10, width/11))
+    height = 3.5 + 1.5*font_scale
+    fig, ax1 = plt.subplots(figsize=(width, height))
     color_map = {"FCMT": "#43c07a", "FCMNT": "#457b9d"}
     # Istogramma delle offerte (quantità) per UP
     bars = ax1.bar(
@@ -16,56 +20,88 @@ def plot_offers_summary(df):
         df["q (MWh)"],
         color=[color_map.get(t, "gray") for t in df["Tipo"]],
         edgecolor='k',
-        alpha=0.85,
+        alpha=0.78,
         zorder=2
     )
-    ax1.set_ylabel("Quantità offerta (MWh)", fontsize=28)
-    ax1.set_xlabel("UP", fontsize=28)
-    ax1.set_title("Entità delle offerte delle UP: quantità (barre), prezzo (linea/arancione), tipo (colore)", fontsize=34, pad=30)
-    # Ingrandisci le etichette delle UP sull'asse x (dimensione grande ma non eccessiva)
-    ax1.tick_params(axis='x', labelsize=22)
-    # Ingrandisci le etichette dei valori dell'asse y sinistro (quantità offerta)
-    ax1.tick_params(axis='y', labelsize=22)
-    ax1.grid(True, axis='y', linestyle='--', alpha=0.5, zorder=1)
+    min_font = 11
+    ax1.set_ylabel("Quantità offerta (MWh)", fontsize=max(int(18*font_scale), min_font), labelpad=int(8*font_scale))
+    ax1.set_xlabel("UP", fontsize=max(int(18*font_scale), min_font), labelpad=int(8*font_scale))
+    ax1.set_title(
+        "Offerte UP: quantità (barre), prezzo (linea/arancione), tipo (colore)",
+        fontsize=max(int(22*font_scale), min_font+2), pad=int(12*font_scale)
+    )
+    # Etichette asse x e y
+    ax1.tick_params(axis='x', labelsize=max(int(13*font_scale), min_font), pad=int(4*font_scale))
+    ax1.tick_params(axis='y', labelsize=max(int(13*font_scale), min_font), pad=int(4*font_scale))
+    ax1.grid(True, axis='y', linestyle='--', alpha=0.35, zorder=1)
     # Asse secondario per il prezzo offerto
     ax2 = ax1.twinx()
-    ax2.plot(df["UP"], df["p (€/MWh)"], color="#e76f51", marker="o", linewidth=4, markersize=22, markeredgewidth=3, markeredgecolor="#222", label="Prezzo offerto (€/MWh)", zorder=3)
-    ax2.set_ylabel("Prezzo offerto (€/MWh)", fontsize=28, color="#e76f51")
-    ax2.tick_params(axis='y', labelcolor="#e76f51", labelsize=24)
-    # Etichette prezzo sopra i marker (più distanti)
+    ax2.plot(
+        df["UP"], df["p (€/MWh)"],
+        color="#e76f51", marker="o", linewidth=2.2*font_scale,
+        markersize=max(10*font_scale, 7), markeredgewidth=1.5*font_scale, markeredgecolor="#222",
+        label="Prezzo offerto (€/MWh)", zorder=3
+    )
+    ax2.set_ylabel("Prezzo offerto (€/MWh)", fontsize=max(int(14*font_scale), min_font), color="#e76f51", labelpad=int(7*font_scale))
+    ax2.tick_params(axis='y', labelcolor="#e76f51", labelsize=max(int(12*font_scale), min_font), pad=int(4*font_scale))
+    # Etichette prezzo sopra i marker (ruotate se tanti UP)
+    rotate_labels = n_up > 8
     for i, up in enumerate(df["UP"]):
         p = df.iloc[i]["p (€/MWh)"]
-        ax2.text(i, p+8, f"{p:.0f}", ha='center', va='bottom', fontsize=28, color="#e76f51", fontweight='bold', bbox=dict(facecolor='white', edgecolor='#e76f51', boxstyle='round,pad=0.2', alpha=0.8), zorder=4)
+        ax2.text(
+            i, p+4.5*font_scale, f"{p:.0f}", ha='center', va='bottom',
+            fontsize=max(int(13*font_scale), min_font), color="#e76f51", fontweight='bold',
+            bbox=dict(facecolor='white', edgecolor='#e76f51', boxstyle='round,pad=0.13', alpha=0.7), zorder=4,
+            clip_on=True,
+            rotation=30 if rotate_labels else 0
+        )
 
     # Etichette sopra le barre: solo quantità (senza unità di misura)
     for i, bar in enumerate(bars):
         tipo = df.iloc[i]["Tipo"]
         ax1.text(
-            bar.get_x() + bar.get_width()/2, bar.get_height() - 2.5,
+            bar.get_x() + bar.get_width()/2, bar.get_height() - 1.2*font_scale,
             f"{bar.get_height():.1f}",
-            ha='center', va='bottom', fontsize=22, fontweight='bold',
+            ha='center', va='bottom', fontsize=max(int(12*font_scale), min_font), fontweight='bold',
             color=color_map.get(tipo, "gray"),
-            path_effects=[pe.withStroke(linewidth=5, foreground="white")]
+            path_effects=[pe.withStroke(linewidth=max(2.2*font_scale, 1.2), foreground="white")],
+            clip_on=True
         )
 
     # Limiti asse y1 e y2 per non far uscire le etichette
     max_q = max(df["q (MWh)"])
     max_p = max(df["p (€/MWh)"])
-    ax1.set_ylim(0, max_q*1.35+15)
-    ax2.set_ylim(0, max_p*1.35+20)
+    ax1.set_ylim(0, max_q*1.18+6*font_scale)
+    ax2.set_ylim(0, max_p*1.18+7*font_scale)
+    fig.subplots_adjust(left=0.11, right=0.97, top=0.91, bottom=0.15)
 
-    # Legenda
+    # Legenda compatta e moderna
     from matplotlib.lines import Line2D
     legend_elements = [
-        Line2D([0], [0], marker='s', color='w', label='FCMT', markerfacecolor=color_map['FCMT'], markeredgecolor='k', markersize=32),
-        Line2D([0], [0], marker='s', color='w', label='FCMNT', markerfacecolor=color_map['FCMNT'], markeredgecolor='k', markersize=32),
-        Line2D([0], [0], marker='o', color='#e76f51', label='Prezzo offerto', markerfacecolor='#e76f51', markeredgecolor='#222', markersize=30)
+        Line2D([0], [0], marker='s', color='w', label='FCMT', markerfacecolor=color_map['FCMT'], markeredgecolor='k', markersize=max(13*font_scale, 8)),
+        Line2D([0], [0], marker='s', color='w', label='FCMNT', markerfacecolor=color_map['FCMNT'], markeredgecolor='k', markersize=max(13*font_scale, 8)),
+        Line2D([0], [0], marker='o', color='#e76f51', label='Prezzo offerto', markerfacecolor='#e76f51', markeredgecolor='#222', markersize=max(10*font_scale, 6))
     ]
-    ax1.legend(handles=legend_elements, title="Tipo UP / Prezzo", loc='upper right', fontsize=24, title_fontsize=26)
-    plt.tight_layout()
+    ax1.legend(
+        handles=legend_elements,
+        title="Tipo UP / Prezzo",
+        loc='upper right',
+        bbox_to_anchor=(1, -0.18),
+        fontsize=max(int(11*font_scale), min_font),
+        title_fontsize=max(int(12*font_scale), min_font+1),
+        borderpad=1.0,
+        labelspacing=0.8,
+        handletextpad=0.5,
+        borderaxespad=0.5,
+        frameon=True,
+        fancybox=True,
+        edgecolor="#bbb",
+        facecolor=(1,1,1,0.85)
+    )
+    plt.tight_layout(pad=0.6)
     return fig
 
-st.set_page_config(page_title="SPaCapp - Simulatore Base Disaccoppiamento", layout="centered")
+st.set_page_config(page_title="Simulatore Base Disaccoppiamento", layout="centered")
 st.title("SPaCapp - Simulatore Base Disaccoppiamento Mercato Elettrico con Segmented Pay as Clear (SPaC)")
 st.markdown("""
 **Legenda:**
