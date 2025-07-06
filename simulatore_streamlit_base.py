@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patheffects as pe
 
-st.set_page_config(page_title="Simulatore Base Disaccoppiamento", layout="centered")
+st.set_page_config(page_title="SPaCapp - Simulatore Base Disaccoppiamento", layout="centered")
 st.title("SPaCapp - Simulatore Base Disaccoppiamento Mercato Elettrico con Segmented Pay as Clear (SPaC)")
 st.markdown("""
 **Legenda:**
