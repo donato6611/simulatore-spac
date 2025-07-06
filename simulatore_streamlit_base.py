@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patheffects as pe
 
-st.set_page_config(page_title="SPaCapp - Simulatore Base Disaccoppiamento", layout="centered")
+st.set_page_config(page_title="Simulatore Base Disaccoppiamento", layout="centered")
 st.title("SPaCapp - Simulatore Base Disaccoppiamento Mercato Elettrico con Segmented Pay as Clear (SPaC)")
 st.markdown("""
 **Legenda:**
@@ -183,9 +183,76 @@ df = edited_df
 
 
 # Rimuovi eventuali duplicati sulla colonna UP e resetta l'indice
+
 if df['UP'].duplicated().any():
     st.error('Attenzione: sono presenti UP duplicate! Ogni UP deve avere un nome univoco.')
     df = df.drop_duplicates(subset=['UP']).reset_index(drop=True)
+
+# --- Grafico riepilogativo offerte UP ---
+st.subheader("Riepilogo offerte delle UP")
+def plot_offers_summary(df):
+    import matplotlib.pyplot as plt
+    import matplotlib.patheffects as pe
+
+    # Forza font globale grande per tutto il grafico SOLO per questo grafico
+    import matplotlib as mpl
+    with plt.rc_context({'font.size': 22}):
+        fig, ax1 = plt.subplots(figsize=(max(22, 2.5*len(df)), 11))
+        color_map = {"FCMT": "#43c07a", "FCMNT": "#457b9d"}
+        icon_map = {"FCMT": "🔆", "FCMNT": "🏭"}
+        # Istogramma delle offerte (quantità) per UP
+        bars = ax1.bar(
+            df["UP"],
+            df["q (MWh)"],
+            color=[color_map.get(t, "gray") for t in df["Tipo"]],
+            edgecolor='k',
+            alpha=0.85,
+            zorder=2
+        )
+        ax1.set_ylabel("Quantità offerta (MWh)", fontsize=28)
+        ax1.set_xlabel("UP", fontsize=28)
+        ax1.set_title("Entità delle offerte delle UP: quantità (barre), prezzo (linea/arancione), tipo (icona/colore)", fontsize=34, pad=30)
+        ax1.grid(True, axis='y', linestyle='--', alpha=0.5, zorder=1)
+
+        # Asse secondario per il prezzo offerto
+        ax2 = ax1.twinx()
+        ax2.plot(df["UP"], df["p (€/MWh)"], color="#e76f51", marker="o", linewidth=4, markersize=22, markeredgewidth=3, markeredgecolor="#222", label="Prezzo offerto (€/MWh)", zorder=3)
+        ax2.set_ylabel("Prezzo offerto (€/MWh)", fontsize=28, color="#e76f51")
+        ax2.tick_params(axis='y', labelcolor="#e76f51", labelsize=24)
+        # Etichette prezzo sopra i marker (più distanti)
+        for i, up in enumerate(df["UP"]):
+            p = df.iloc[i]["p (€/MWh)"]
+            ax2.text(i, p+8, f"{p:.0f}", ha='center', va='bottom', fontsize=28, color="#e76f51", fontweight='bold', bbox=dict(facecolor='white', edgecolor='#e76f51', boxstyle='round,pad=0.2', alpha=0.8), zorder=4)
+
+        # Etichette sopra le barre: solo quantità (senza unità di misura)
+        for i, bar in enumerate(bars):
+            tipo = df.iloc[i]["Tipo"]
+            ax1.text(
+                bar.get_x() + bar.get_width()/2, bar.get_height() - 2.5,
+                f"{bar.get_height():.1f}",
+                ha='center', va='bottom', fontsize=22, fontweight='bold',
+                color=color_map.get(tipo, "gray"),
+                path_effects=[pe.withStroke(linewidth=5, foreground="white")]
+            )
+
+        # Limiti asse y1 e y2 per non far uscire le etichette
+        max_q = max(df["q (MWh)"])
+        max_p = max(df["p (€/MWh)"])
+        ax1.set_ylim(0, max_q*1.35+15)
+        ax2.set_ylim(0, max_p*1.35+20)
+
+        # Legenda
+        from matplotlib.lines import Line2D
+        legend_elements = [
+            Line2D([0], [0], marker='s', color='w', label='FCMT', markerfacecolor=color_map['FCMT'], markeredgecolor='k', markersize=32),
+            Line2D([0], [0], marker='s', color='w', label='FCMNT', markerfacecolor=color_map['FCMNT'], markeredgecolor='k', markersize=32),
+            Line2D([0], [0], marker='o', color='#e76f51', label='Prezzo offerto', markerfacecolor='#e76f51', markeredgecolor='#222', markersize=30)
+        ]
+        ax1.legend(handles=legend_elements, title="Tipo UP / Prezzo", loc='upper right', fontsize=24, title_fontsize=26)
+        plt.tight_layout()
+        return fig
+
+st.pyplot(plot_offers_summary(df))
 
 
 
