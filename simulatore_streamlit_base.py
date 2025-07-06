@@ -104,7 +104,7 @@ def plot_offers_summary(df):
     plt.tight_layout(pad=0.6)
     return fig
 
-st.set_page_config(page_title="SPaCapp - Simulatore Base Disaccoppiamento", layout="centered")
+st.set_page_config(page_title="SpACapp - Simulatore Base Disaccoppiamento", layout="centered")
 st.title("SPaCapp - Simulatore Base Disaccoppiamento Mercato Elettrico con Segmented Pay as Clear (SPaC)")
 st.markdown("""
 **Legenda:**
@@ -499,15 +499,32 @@ def plot_costs_and_prices():
     y_spac = cost + max(costi)*0.04  # 4% sopra la barra
     ax1.text(1, y_spac, testo_risparmio, ha='center', va='bottom', fontsize=12, color='#2a9d8f', fontweight='bold')
 
-    # Legenda personalizzata
+    # Legenda personalizzata sotto il grafico a destra, con font più piccolo
     from matplotlib.patches import Patch
     from matplotlib.lines import Line2D
     legend_elements = [
         Patch(facecolor='#888', edgecolor='k', label='Costo Totale PaC Classico'),
         Patch(facecolor='#2a9d8f', edgecolor='k', label='Costo Totale SPaC'),
-        Line2D([0], [0], marker='o', color='#e76f51', label='Prezzo finale (€/MWh)', markerfacecolor='#e76f51', markeredgecolor='#222', markersize=13, linewidth=0)
+        Line2D([0], [0], marker='o', color='#e76f51', label='Prezzo finale (€/MWh)', markerfacecolor='#e76f51', markeredgecolor='#222', markersize=11, linewidth=0)
     ]
-    ax1.legend(handles=legend_elements, loc='upper right')
+    legend_fontsize = 8
+    legend_title_fontsize = 9
+    ax1.legend(
+        handles=legend_elements,
+        title="Legenda",
+        loc='upper right',
+        bbox_to_anchor=(1, -0.13),  # più vicino all'asse x
+        fontsize=legend_fontsize,
+        title_fontsize=legend_title_fontsize,
+        borderpad=0.6,
+        labelspacing=0.5,
+        handletextpad=0.3,
+        borderaxespad=0.3,
+        frameon=True,
+        fancybox=True,
+        edgecolor="#bbb",
+        facecolor=(1,1,1,0.85)
+    )
     return fig
 
 st.pyplot(plot_costs_and_prices())
