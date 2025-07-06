@@ -450,6 +450,9 @@ tabella_confronto = pd.DataFrame({
 st.table(tabella_confronto.set_index("").style.set_properties(**{"text-align": "center"}))
 
 # --- Blocco riepilogo risparmi ---
+
+# Arrotonda il risparmio in euro all'intero più vicino
+risparmio_euro = int(round(classic_cost - cost))
 st.markdown("""
 <div style='background-color:#e9f5ec; border-radius:8px; padding:12px; margin-top:10px; margin-bottom:10px;'>
 <b>Risparmi ottenuti con SPaC rispetto al classico:</b><br>
@@ -459,7 +462,7 @@ st.markdown("""
 </ul>
 </div>
 """.format(
-    classic_cost - cost,
+    risparmio_euro,
     100*(classic_cost-cost)/classic_cost if classic_cost else 0,
     marginal_price_classic - weighted_price_spac,
     100*(marginal_price_classic-weighted_price_spac)/marginal_price_classic if marginal_price_classic else 0
