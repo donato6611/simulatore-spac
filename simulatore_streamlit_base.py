@@ -65,7 +65,7 @@ def plot_offers_summary(df):
     plt.tight_layout()
     return fig
 
-st.set_page_config(page_title="Simulatore Base Disaccoppiamento", layout="centered")
+st.set_page_config(page_title="SPaCapp - Simulatore Base Disaccoppiamento", layout="centered")
 st.title("SPaCapp - Simulatore Base Disaccoppiamento Mercato Elettrico con Segmented Pay as Clear (SPaC)")
 st.markdown("""
 **Legenda:**
