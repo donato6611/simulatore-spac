@@ -458,7 +458,7 @@ st.markdown("""
 <b>Risparmi ottenuti con SPaC rispetto al classico:</b><br>
 <ul style='margin-bottom:0;'>
   <li><b>Risparmio sul costo totale:</b> <span style='color:#2a9d8f; font-size:1.1em'><b>{} €</b></span> (<b>{:.1f}%</b>)</li>
-  <li><b>Risparmio sul prezzo medio esitato:</b> <span style='color:#457b9d; font-size:1.1em'><b>{:.2f} €/MWh</b></span> (<b>{:.1f}%</b>)</li>
+  <li><b>Risparmio sul prezzo medio esitato:</b> <span style='color:#e76f51; font-size:1.1em'><b>{:.2f} €/MWh</b></span> (<b>{:.1f}%</b>)</li>
 </ul>
 </div>
 """.format(
@@ -490,7 +490,7 @@ def plot_costs_and_prices():
     # Secondo asse per i prezzi
     ax2 = ax1.twinx()
     # Linea più spessa, colore più acceso, marker grande e bordo
-    ax2.plot(labels, prezzi, color='#e76f51', marker='o', markersize=12, markeredgewidth=2, markeredgecolor='#222', linewidth=3, label='Prezzo finale (€/MWh)', zorder=10)
+    ax2.plot(labels, prezzi, color='#e76f51', marker='o', markersize=12, markeredgewidth=0, markeredgecolor='#e76f51', linewidth=3, label='Prezzo finale (€/MWh)', zorder=10)
     for i, v in enumerate(prezzi):
         ax2.text(i+0.15, v+2, f"{v:.2f}", ha='center', color='#e76f51', fontsize=9, fontweight='bold', bbox=dict(facecolor='white', edgecolor='#e76f51', boxstyle='round,pad=0.2', alpha=0.8))
     ax2.set_ylabel('Prezzo finale (€/MWh)', color='#e76f51', fontsize=12, fontweight='bold')
