@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patheffects as pe
 
-st.set_page_config(page_title="SPaCapp - Simulatore Base Disaccoppiamento", layout="centered")
+st.set_page_config(page_title="Simulatore Base Disaccoppiamento", layout="centered")
 st.title("SPaCapp - Simulatore Base Disaccoppiamento Mercato Elettrico con Segmented Pay as Clear (SPaC)")
 st.markdown("""
 **Legenda:**
@@ -211,7 +211,7 @@ def plot_offers_summary(df):
         )
         ax1.set_ylabel("Quantità offerta (MWh)", fontsize=28)
         ax1.set_xlabel("UP", fontsize=28)
-        ax1.set_title("Entità delle offerte delle UP: quantità (barre), prezzo (linea/arancione), tipo (icona/colore)", fontsize=34, pad=30)
+        ax1.set_title("Entità delle offerte delle UP: quantità (barre), prezzo (linea/arancione), tipo (colore)", fontsize=34, pad=30)
         ax1.grid(True, axis='y', linestyle='--', alpha=0.5, zorder=1)
 
         # Asse secondario per il prezzo offerto
