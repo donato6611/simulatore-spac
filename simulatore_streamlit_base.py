@@ -26,9 +26,10 @@ def plot_offers_summary(df):
     min_font = 11
     ax1.set_ylabel("Quantità offerta (MWh)", fontsize=max(int(18*font_scale), min_font), labelpad=int(8*font_scale))
     ax1.set_xlabel("UP", fontsize=max(int(18*font_scale), min_font), labelpad=int(8*font_scale))
+    # Titolo: font armonizzato rispetto alla legenda (solo leggermente più grande)
     ax1.set_title(
         "Offerte UP: quantità (barre), prezzo (linea/arancione), tipo (colore)",
-        fontsize=max(int(22*font_scale), min_font+2), pad=int(12*font_scale)
+        fontsize=max(int(16*font_scale), min_font+6), pad=int(12*font_scale)
     )
     # Etichette asse x e y
     ax1.tick_params(axis='x', labelsize=max(int(13*font_scale), min_font), pad=int(4*font_scale))
@@ -82,13 +83,15 @@ def plot_offers_summary(df):
         Line2D([0], [0], marker='s', color='w', label='FCMNT', markerfacecolor=color_map['FCMNT'], markeredgecolor='k', markersize=max(13*font_scale, 8)),
         Line2D([0], [0], marker='o', color='#e76f51', label='Prezzo offerto', markerfacecolor='#e76f51', markeredgecolor='#222', markersize=max(10*font_scale, 6))
     ]
+    legend_fontsize = max(int(13*font_scale), min_font+2)
+    legend_title_fontsize = legend_fontsize + 2
     ax1.legend(
         handles=legend_elements,
         title="Tipo UP / Prezzo",
         loc='upper right',
         bbox_to_anchor=(1, -0.18),
-        fontsize=max(int(11*font_scale), min_font),
-        title_fontsize=max(int(12*font_scale), min_font+1),
+        fontsize=legend_fontsize,
+        title_fontsize=legend_title_fontsize,
         borderpad=1.0,
         labelspacing=0.8,
         handletextpad=0.5,
@@ -101,7 +104,7 @@ def plot_offers_summary(df):
     plt.tight_layout(pad=0.6)
     return fig
 
-st.set_page_config(page_title="SPaCapp - Simulatore Base Disaccoppiamento", layout="centered")
+st.set_page_config(page_title="Simulatore Base Disaccoppiamento", layout="centered")
 st.title("SPaCapp - Simulatore Base Disaccoppiamento Mercato Elettrico con Segmented Pay as Clear (SPaC)")
 st.markdown("""
 **Legenda:**
