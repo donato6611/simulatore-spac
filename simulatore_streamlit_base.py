@@ -4,17 +4,16 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patheffects as pe
 
-st.set_page_config(page_title="SPaCapp - Simulatore Base Disaccoppiamento", layout="centered")
+st.set_page_config(page_title="Simulatore Base Disaccoppiamento", layout="centered")
 st.title("SPaCapp - Simulatore Base Disaccoppiamento Mercato Elettrico con Segmented Pay as Clear (SPaC)")
 st.markdown("""
 **Legenda:**
 - **UP**: Unità di Produzione (centrale, impianto o gruppo che offre energia sul mercato)
 - **FCMT**: Fonti con Costi Marginali Trascurabili (ad esempio rinnovabili o nucleare)
 - **FCMNT**: Fonti con Costi Marginali Non Trascurabili (ad esempio fossili)
-- **q (MWh)**: Quantità offerta
-- **p (€/MWh)**: Prezzo offerto
-
-
+- **q (MWh)**: Quantità di energia offerta
+- **p (€/MWh)**: Prezzo dell'energia offerto    
+- **Domanda totale (MWh)**: Quantità di energia totale richiesta dal mercato   
 
 Simulazione del clearing classico e disaccoppiato con visualizzazione delle UP accettate/escluse e delle curve domanda/offerta per FCMT e FCMNT.
 """)
@@ -83,22 +82,22 @@ def plot_up_status(offers, acc_fcmt, acc_fcmnt):
     # FCMT su una riga, FCMNT su un'altra, con separazione e markers diversi
     fcmt_offers = [o for o in offers if o['type']=='FCMT']
     fcmnt_offers = [o for o in offers if o['type']=='FCMNT']
+    # FCMT: marker verde (accettata) o rosso (esclusa)
     for i, o in enumerate(fcmt_offers):
         acc = next((a for a in acc_fcmt if a['UP']==o['UP'] and a['q']>0), None)
-        color = '#43c07a' if acc else '#e76f51'  # verde più chiaro per leggibilità
+        color = '#43c07a' if acc else '#e76f51'
         marker = 'o' if acc else 'x'
-        text_color = 'black' if acc else 'black'
+        text_color = 'black'
         ax.scatter(i, 1, s=400, color=color, marker=marker, edgecolor='k', zorder=3)
-        # Etichetta spostata sopra il marker, con outline bianco spesso
         ax.text(i, 1.23, o['UP'], ha='center', fontsize=10, color=text_color, fontweight='bold',
                 path_effects=[pe.withStroke(linewidth=3, foreground="white")])
+    # FCMNT: marker blu (accettata) o arancio (esclusa)
     for i, o in enumerate(fcmnt_offers):
         acc = next((a for a in acc_fcmnt if a['UP']==o['UP'] and a['q']>0), None)
-        color = '#457b9d' if acc else '#f4a261'  # blu più chiaro per leggibilità
-        marker = 's' if acc else 'P'
-        text_color = 'white' if acc else 'black'
+        color = '#457b9d' if acc else '#f4a261'
+        marker = 'o' if acc else 'x'
+        text_color = 'black'
         ax.scatter(i, 0, s=400, color=color, marker=marker, edgecolor='k', zorder=3)
-        # Etichetta spostata sotto il marker, con outline bianco spesso
         ax.text(i, -0.28, o['UP'], ha='center', fontsize=10, color=text_color, fontweight='bold',
                 path_effects=[pe.withStroke(linewidth=3, foreground="white")])
     ax.set_yticks([0,1])
@@ -108,15 +107,15 @@ def plot_up_status(offers, acc_fcmt, acc_fcmnt):
     ax.set_ylim(-0.5, 1.5)
     ax.set_title('UP accettate (verde/blu) ed escluse (rosso/arancio)')
     ax.axis('off')
-    # Legenda simpatica, spostata in basso per non sovrapporsi
+    # Legenda marker e colori
     from matplotlib.lines import Line2D
     legend_elements = [
         Line2D([0], [0], marker='o', color='w', label='FCMT accettata', markerfacecolor='#43c07a', markersize=15, markeredgecolor='k'),
         Line2D([0], [0], marker='x', color='w', label='FCMT esclusa', markerfacecolor='#e76f51', markeredgecolor='#e76f51', markersize=15),
-        Line2D([0], [0], marker='s', color='w', label='FCMNT accettata', markerfacecolor='#457b9d', markersize=15, markeredgecolor='k'),
-        Line2D([0], [0], marker='P', color='w', label='FCMNT esclusa', markerfacecolor='#f4a261', markeredgecolor='#f4a261', markersize=15)
+        Line2D([0], [0], marker='o', color='w', label='FCMNT accettata', markerfacecolor='#457b9d', markersize=15, markeredgecolor='k'),
+        Line2D([0], [0], marker='x', color='w', label='FCMNT esclusa', markerfacecolor='#f4a261', markeredgecolor='#f4a261', markersize=15)
     ]
-    ax.legend(handles=legend_elements, loc='lower center', bbox_to_anchor=(0.5, -0.35), ncol=2, fontsize=10, frameon=False)
+    ax.legend(handles=legend_elements, loc='lower center', bbox_to_anchor=(0.5, -0.35), ncol=2, fontsize=12, frameon=False)
     return fig
 
 # --- INIZIO BLOCCO SIMULAZIONE BASE (come simulatore_streamlit.py, con aggiunte grafiche) ---
@@ -131,7 +130,7 @@ go_to_optimum = st.sidebar.button("Vai direttamente al risultato ottimizzato")
 
 st.header("1. IMPOSTA LE OFFERTE DELLE UNITA DI PRODUZIONE UP E LA DOMANDA TOTALE")
 st.markdown("""
-<span style='color:#2a9d8f'><b>Per modificare una UP, clicca direttamente sulla cella che vuoi cambiare, digita il dato e premi invio o usa i pulsanti + e -.<br>
+<span style='color:#2a9d8f'><b>Per modificare una UP, clicca direttamente sulla cella che vuoi cambiare, digita il dato e premi invio o usa i pulsanti + e -streamlit run simulatore_streamlit_base.py.<br>
 <span style='color:#e76f51'>L'aggiunta o la rimozione di UP non è consentita in questa versione.</span></b></span>
 """, unsafe_allow_html=True)
 
@@ -290,33 +289,81 @@ if run_optimization and not go_to_optimum:
     split, prices, cost, acc, history = decoupled_clearing_animated(offers, demand, step=step_opt, speed=speed_opt, animate=True, go_optimum=False)
 elif go_to_optimum:
     split, prices, cost, acc, history = decoupled_clearing_animated(offers, demand, step=step_opt, speed=0, animate=False, go_optimum=True)
+
 else:
     split, prices, cost, acc = decoupled_clearing(offers, demand, step=step_opt)
     history = None
 acc_fcmt, acc_fcmnt = acc
+# Calcolo prezzo medio ponderato per SPaC (mercato segmentato) DOPO la definizione di split e prices
+if 'split' in locals() and 'prices' in locals() and split and prices and (split[0] + split[1] > 0):
+    weighted_price_spac = (split[0] * prices[0] + split[1] * prices[1]) / (split[0] + split[1])
+else:
+    weighted_price_spac = 0
 
-st.header("2. RISULTATI DELLA SIMULAZIONE COMPARATIVA DEL COSTO TOTALE DEL SISTEMA")
-st.markdown(f"**Clearing classico:** prezzo marginale **{marginal_price_classic} €/MWh**, costo totale **{classic_cost:.0f} €**")
-st.markdown(f"**Clearing disaccoppiato ottimale:** costo totale **{cost:.0f} €**  ")
-st.markdown(f"- Domanda FCMT: **{split[0]:.1f} MWh** a **{prices[0]} €/MWh**")
-st.markdown(f"- Domanda FCMNT: **{split[1]:.1f} MWh** a **{prices[1]} €/MWh**")
-st.markdown(f"**Risparmio:** {classic_cost - cost:.0f} € ({100*(classic_cost-cost)/classic_cost:.1f}%)")
+
+
+
+st.header("2. RISULTATI DELLA SIMULAZIONE: CONFRONTO TRA CLEARING CLASSICO E SPaC")
+
+# --- Tabella di confronto risultati ---
+import pandas as pd
+tabella_confronto = pd.DataFrame({
+    "": ["Prezzo unitario (€/MWh)", "Costo totale (€)", "Domanda FCMT (MWh)", "Prezzo FCMT (€/MWh)", "Domanda FCMNT (MWh)", "Prezzo FCMNT (€/MWh)"],
+    "Clearing classico": [f"{marginal_price_classic:.2f}", f"{classic_cost:.0f}", f"{demand:.2f}", f"{marginal_price_classic:.2f}", "-", "-"],
+    "SPaC": [f"{weighted_price_spac:.2f}", f"{cost:.0f}", f"{split[0]:.2f}", f"{prices[0]:.2f}", f"{split[1]:.2f}", f"{prices[1]:.2f}"]
+})
+st.table(tabella_confronto.set_index("").style.set_properties(**{"text-align": "center"}))
+
+# --- Blocco riepilogo risparmi ---
+st.markdown("""
+<div style='background-color:#e9f5ec; border-radius:8px; padding:12px; margin-top:10px; margin-bottom:10px;'>
+<b>Risparmi ottenuti con SPaC rispetto al classico:</b><br>
+<ul style='margin-bottom:0;'>
+  <li><b>Risparmio sul costo totale:</b> <span style='color:#2a9d8f; font-size:1.1em'><b>{} €</b></span> (<b>{:.1f}%</b>)</li>
+  <li><b>Risparmio sul prezzo medio esitato:</b> <span style='color:#457b9d; font-size:1.1em'><b>{:.2f} €/MWh</b></span> (<b>{:.1f}%</b>)</li>
+</ul>
+</div>
+""".format(
+    classic_cost - cost,
+    100*(classic_cost-cost)/classic_cost if classic_cost else 0,
+    marginal_price_classic - weighted_price_spac,
+    100*(marginal_price_classic-weighted_price_spac)/marginal_price_classic if marginal_price_classic else 0
+), unsafe_allow_html=True)
 
 # Grafico costi (come simulatore_streamlit.py)
-def plot_costs():
-    fig, ax = plt.subplots(figsize=(5,4))
-    labels = ['PaC Classico', 'Disaccoppiato Ottimale']
+
+# Grafico costi e prezzi medi
+def plot_costs_and_prices():
+    fig, ax1 = plt.subplots(figsize=(6,4))
+    labels = ['PaC Classico', 'SPaC Ottimale']
     costi = [classic_cost, cost]
-    bars = ax.bar(labels, costi, color=['#888', '#2a9d8f'])
+    prezzi = [marginal_price_classic, weighted_price_spac]
+    color_cost = ['#888', '#2a9d8f']
+    bars = ax1.bar(labels, costi, color=color_cost, width=0.4, label='Costo Totale (€)')
     for i, v in enumerate(costi):
-        ax.text(i, v+50, f"{v:.0f}", ha='center')
-    riduzione = 100 * (classic_cost - cost) / classic_cost
-    ax.text(1, cost + 200, f"-{riduzione:.1f}%", ha='center', color='#2a9d8f', fontsize=12, fontweight='bold')
-    ax.set_ylabel('Costo Totale (€)')
-    ax.set_title('Confronto costo sistema')
+        ax1.text(i-0.15, v+50, f"{v:.0f}", ha='center', fontsize=10)
+    ax1.set_ylabel('Costo Totale (€)', color='#222')
+    ax1.set_title('Confronto costo sistema e prezzo finale')
+
+    # Secondo asse per i prezzi
+    ax2 = ax1.twinx()
+    # Linea più spessa, colore più acceso, marker grande e bordo
+    ax2.plot(labels, prezzi, color='#e76f51', marker='o', markersize=12, markeredgewidth=2, markeredgecolor='#222', linewidth=3, label='Prezzo finale (€/MWh)', zorder=10)
+    for i, v in enumerate(prezzi):
+        ax2.text(i+0.15, v+2, f"{v:.2f}", ha='center', color='#e76f51', fontsize=13, fontweight='bold', bbox=dict(facecolor='white', edgecolor='#e76f51', boxstyle='round,pad=0.2', alpha=0.8))
+    ax2.set_ylabel('Prezzo finale (€/MWh)', color='#e76f51', fontsize=12, fontweight='bold')
+    ax2.set_ylim(0, max(prezzi)*1.3)
+
+    # Legenda combinata
+    lines, labels_ = [], []
+    for ax in [ax1, ax2]:
+        l, lab = ax.get_legend_handles_labels()
+        lines += l
+        labels_ += lab
+    ax1.legend(lines, labels_, loc='upper right')
     return fig
 
-st.pyplot(plot_costs())
+st.pyplot(plot_costs_and_prices())
 
 
 
