@@ -1,10 +1,71 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.patheffects as pe
 
-st.set_page_config(page_title="SPaCapp - Simulatore Base Disaccoppiamento", layout="centered")
+import numpy as np
+
+# --- Funzione per il grafico riepilogativo delle offerte UP (versione corretta e unica) ---
+def plot_offers_summary(df):
+    import matplotlib.pyplot as plt
+    import matplotlib.patheffects as pe
+    # Forza font grande SOLO per questo grafico, senza toccare il default globale
+    fig, ax1 = plt.subplots(figsize=(max(22, 2.5*len(df)), 11))
+    color_map = {"FCMT": "#43c07a", "FCMNT": "#457b9d"}
+    # Istogramma delle offerte (quantità) per UP
+    bars = ax1.bar(
+        df["UP"],
+        df["q (MWh)"],
+        color=[color_map.get(t, "gray") for t in df["Tipo"]],
+        edgecolor='k',
+        alpha=0.85,
+        zorder=2
+    )
+    ax1.set_ylabel("Quantità offerta (MWh)", fontsize=28)
+    ax1.set_xlabel("UP", fontsize=28)
+    ax1.set_title("Entità delle offerte delle UP: quantità (barre), prezzo (linea/arancione), tipo (colore)", fontsize=34, pad=30)
+    # Ingrandisci le etichette delle UP sull'asse x (dimensione grande ma non eccessiva)
+    ax1.tick_params(axis='x', labelsize=22)
+    # Ingrandisci le etichette dei valori dell'asse y sinistro (quantità offerta)
+    ax1.tick_params(axis='y', labelsize=22)
+    ax1.grid(True, axis='y', linestyle='--', alpha=0.5, zorder=1)
+    # Asse secondario per il prezzo offerto
+    ax2 = ax1.twinx()
+    ax2.plot(df["UP"], df["p (€/MWh)"], color="#e76f51", marker="o", linewidth=4, markersize=22, markeredgewidth=3, markeredgecolor="#222", label="Prezzo offerto (€/MWh)", zorder=3)
+    ax2.set_ylabel("Prezzo offerto (€/MWh)", fontsize=28, color="#e76f51")
+    ax2.tick_params(axis='y', labelcolor="#e76f51", labelsize=24)
+    # Etichette prezzo sopra i marker (più distanti)
+    for i, up in enumerate(df["UP"]):
+        p = df.iloc[i]["p (€/MWh)"]
+        ax2.text(i, p+8, f"{p:.0f}", ha='center', va='bottom', fontsize=28, color="#e76f51", fontweight='bold', bbox=dict(facecolor='white', edgecolor='#e76f51', boxstyle='round,pad=0.2', alpha=0.8), zorder=4)
+
+    # Etichette sopra le barre: solo quantità (senza unità di misura)
+    for i, bar in enumerate(bars):
+        tipo = df.iloc[i]["Tipo"]
+        ax1.text(
+            bar.get_x() + bar.get_width()/2, bar.get_height() - 2.5,
+            f"{bar.get_height():.1f}",
+            ha='center', va='bottom', fontsize=22, fontweight='bold',
+            color=color_map.get(tipo, "gray"),
+            path_effects=[pe.withStroke(linewidth=5, foreground="white")]
+        )
+
+    # Limiti asse y1 e y2 per non far uscire le etichette
+    max_q = max(df["q (MWh)"])
+    max_p = max(df["p (€/MWh)"])
+    ax1.set_ylim(0, max_q*1.35+15)
+    ax2.set_ylim(0, max_p*1.35+20)
+
+    # Legenda
+    from matplotlib.lines import Line2D
+    legend_elements = [
+        Line2D([0], [0], marker='s', color='w', label='FCMT', markerfacecolor=color_map['FCMT'], markeredgecolor='k', markersize=32),
+        Line2D([0], [0], marker='s', color='w', label='FCMNT', markerfacecolor=color_map['FCMNT'], markeredgecolor='k', markersize=32),
+        Line2D([0], [0], marker='o', color='#e76f51', label='Prezzo offerto', markerfacecolor='#e76f51', markeredgecolor='#222', markersize=30)
+    ]
+    ax1.legend(handles=legend_elements, title="Tipo UP / Prezzo", loc='upper right', fontsize=24, title_fontsize=26)
+    plt.tight_layout()
+    return fig
+
+st.set_page_config(page_title="Simulatore Base Disaccoppiamento", layout="centered")
 st.title("SPaCapp - Simulatore Base Disaccoppiamento Mercato Elettrico con Segmented Pay as Clear (SPaC)")
 st.markdown("""
 **Legenda:**
@@ -78,6 +139,8 @@ def decoupled_clearing(offers, demand, step=0.1):
     return best_split, best_prices, best_cost, best_acc
 
 def plot_up_status(offers, acc_fcmt, acc_fcmnt):
+    import matplotlib.pyplot as plt
+    import matplotlib.patheffects as pe
     fig, ax = plt.subplots(figsize=(8,2))
     # FCMT su una riga, FCMNT su un'altra, con separazione e markers diversi
     fcmt_offers = [o for o in offers if o['type']=='FCMT']
@@ -89,6 +152,7 @@ def plot_up_status(offers, acc_fcmt, acc_fcmnt):
         marker = 'o' if acc else 'x'
         text_color = 'black'
         ax.scatter(i, 1, s=400, color=color, marker=marker, edgecolor='k', zorder=3)
+        # Etichetta sopra il marker (posizione ottimale, come prima: 1.23)
         ax.text(i, 1.23, o['UP'], ha='center', fontsize=10, color=text_color, fontweight='bold',
                 path_effects=[pe.withStroke(linewidth=3, foreground="white")])
     # FCMNT: marker blu (accettata) o arancio (esclusa)
@@ -98,7 +162,8 @@ def plot_up_status(offers, acc_fcmt, acc_fcmnt):
         marker = 'o' if acc else 'x'
         text_color = 'black'
         ax.scatter(i, 0, s=400, color=color, marker=marker, edgecolor='k', zorder=3)
-        ax.text(i, -0.28, o['UP'], ha='center', fontsize=10, color=text_color, fontweight='bold',
+        # Etichetta più staccata sotto il marker (abbassata rispetto a prima: -0.28 -> -0.38)
+        ax.text(i, -0.38, o['UP'], ha='center', fontsize=10, color=text_color, fontweight='bold',
                 path_effects=[pe.withStroke(linewidth=3, foreground="white")])
     ax.set_yticks([0,1])
     ax.set_yticklabels(['FCMNT','FCMT'])
@@ -115,7 +180,8 @@ def plot_up_status(offers, acc_fcmt, acc_fcmnt):
         Line2D([0], [0], marker='o', color='w', label='FCMNT accettata', markerfacecolor='#457b9d', markersize=15, markeredgecolor='k'),
         Line2D([0], [0], marker='x', color='w', label='FCMNT esclusa', markerfacecolor='#f4a261', markeredgecolor='#f4a261', markersize=15)
     ]
-    ax.legend(handles=legend_elements, loc='lower center', bbox_to_anchor=(0.5, -0.35), ncol=2, fontsize=12, frameon=False)
+    # Sposta la legenda molto più in basso (ad esempio -0.85)
+    ax.legend(handles=legend_elements, loc='lower center', bbox_to_anchor=(0.5, -0.65), ncol=2, fontsize=12, frameon=False)
     return fig
 
 # --- INIZIO BLOCCO SIMULAZIONE BASE (come simulatore_streamlit.py, con aggiunte grafiche) ---
@@ -190,68 +256,6 @@ if df['UP'].duplicated().any():
 
 # --- Grafico riepilogativo offerte UP ---
 st.subheader("Riepilogo offerte delle UP")
-def plot_offers_summary(df):
-    import matplotlib.pyplot as plt
-    import matplotlib.patheffects as pe
-
-    # Forza font globale grande per tutto il grafico SOLO per questo grafico
-    import matplotlib as mpl
-    with plt.rc_context({'font.size': 22}):
-        fig, ax1 = plt.subplots(figsize=(max(22, 2.5*len(df)), 11))
-        color_map = {"FCMT": "#43c07a", "FCMNT": "#457b9d"}
-        icon_map = {"FCMT": "🔆", "FCMNT": "🏭"}
-        # Istogramma delle offerte (quantità) per UP
-        bars = ax1.bar(
-            df["UP"],
-            df["q (MWh)"],
-            color=[color_map.get(t, "gray") for t in df["Tipo"]],
-            edgecolor='k',
-            alpha=0.85,
-            zorder=2
-        )
-        ax1.set_ylabel("Quantità offerta (MWh)", fontsize=28)
-        ax1.set_xlabel("UP", fontsize=28)
-        ax1.set_title("Entità delle offerte delle UP: quantità (barre), prezzo (linea/arancione), tipo (colore)", fontsize=34, pad=30)
-        ax1.grid(True, axis='y', linestyle='--', alpha=0.5, zorder=1)
-
-        # Asse secondario per il prezzo offerto
-        ax2 = ax1.twinx()
-        ax2.plot(df["UP"], df["p (€/MWh)"], color="#e76f51", marker="o", linewidth=4, markersize=22, markeredgewidth=3, markeredgecolor="#222", label="Prezzo offerto (€/MWh)", zorder=3)
-        ax2.set_ylabel("Prezzo offerto (€/MWh)", fontsize=28, color="#e76f51")
-        ax2.tick_params(axis='y', labelcolor="#e76f51", labelsize=24)
-        # Etichette prezzo sopra i marker (più distanti)
-        for i, up in enumerate(df["UP"]):
-            p = df.iloc[i]["p (€/MWh)"]
-            ax2.text(i, p+8, f"{p:.0f}", ha='center', va='bottom', fontsize=28, color="#e76f51", fontweight='bold', bbox=dict(facecolor='white', edgecolor='#e76f51', boxstyle='round,pad=0.2', alpha=0.8), zorder=4)
-
-        # Etichette sopra le barre: solo quantità (senza unità di misura)
-        for i, bar in enumerate(bars):
-            tipo = df.iloc[i]["Tipo"]
-            ax1.text(
-                bar.get_x() + bar.get_width()/2, bar.get_height() - 2.5,
-                f"{bar.get_height():.1f}",
-                ha='center', va='bottom', fontsize=22, fontweight='bold',
-                color=color_map.get(tipo, "gray"),
-                path_effects=[pe.withStroke(linewidth=5, foreground="white")]
-            )
-
-        # Limiti asse y1 e y2 per non far uscire le etichette
-        max_q = max(df["q (MWh)"])
-        max_p = max(df["p (€/MWh)"])
-        ax1.set_ylim(0, max_q*1.35+15)
-        ax2.set_ylim(0, max_p*1.35+20)
-
-        # Legenda
-        from matplotlib.lines import Line2D
-        legend_elements = [
-            Line2D([0], [0], marker='s', color='w', label='FCMT', markerfacecolor=color_map['FCMT'], markeredgecolor='k', markersize=32),
-            Line2D([0], [0], marker='s', color='w', label='FCMNT', markerfacecolor=color_map['FCMNT'], markeredgecolor='k', markersize=32),
-            Line2D([0], [0], marker='o', color='#e76f51', label='Prezzo offerto', markerfacecolor='#e76f51', markeredgecolor='#222', markersize=30)
-        ]
-        ax1.legend(handles=legend_elements, title="Tipo UP / Prezzo", loc='upper right', fontsize=24, title_fontsize=26)
-        plt.tight_layout()
-        return fig
-
 st.pyplot(plot_offers_summary(df))
 
 
@@ -329,6 +333,7 @@ def decoupled_clearing_animated(offers, demand, step=0.1, speed=0.2, animate=Fal
 
 # Funzione per grafico animato costi
 def plot_costs_animation(classic_cost, current_cost, best_cost):
+    import matplotlib.pyplot as plt
     fig, ax = plt.subplots(figsize=(5,4))
     labels = ['PaC Classico', 'Iterazione attuale', 'Migliore']
     costi = [classic_cost, current_cost, best_cost]
@@ -425,14 +430,17 @@ st.markdown("""
 
 # Grafico costi e prezzi medi
 def plot_costs_and_prices():
+    import matplotlib.pyplot as plt
     fig, ax1 = plt.subplots(figsize=(6,4))
     labels = ['PaC Classico', 'SPaC Ottimale']
     costi = [classic_cost, cost]
     prezzi = [marginal_price_classic, weighted_price_spac]
     color_cost = ['#888', '#2a9d8f']
     bars = ax1.bar(labels, costi, color=color_cost, width=0.4, label='Costo Totale (€)')
+    # Etichette del costo totale con colore corrispondente alla barra
     for i, v in enumerate(costi):
-        ax1.text(i-0.15, v+50, f"{v:.0f}", ha='center', fontsize=10)
+        colore = color_cost[i]
+        ax1.text(i-0.15, v+50, f"{v:.0f}", ha='center', fontsize=10, color=colore, fontweight='bold')
     ax1.set_ylabel('Costo Totale (€)', color='#222')
     ax1.set_title('Confronto costo sistema e prezzo finale')
 
@@ -441,17 +449,26 @@ def plot_costs_and_prices():
     # Linea più spessa, colore più acceso, marker grande e bordo
     ax2.plot(labels, prezzi, color='#e76f51', marker='o', markersize=12, markeredgewidth=2, markeredgecolor='#222', linewidth=3, label='Prezzo finale (€/MWh)', zorder=10)
     for i, v in enumerate(prezzi):
-        ax2.text(i+0.15, v+2, f"{v:.2f}", ha='center', color='#e76f51', fontsize=13, fontweight='bold', bbox=dict(facecolor='white', edgecolor='#e76f51', boxstyle='round,pad=0.2', alpha=0.8))
+        ax2.text(i+0.15, v+2, f"{v:.2f}", ha='center', color='#e76f51', fontsize=9, fontweight='bold', bbox=dict(facecolor='white', edgecolor='#e76f51', boxstyle='round,pad=0.2', alpha=0.8))
     ax2.set_ylabel('Prezzo finale (€/MWh)', color='#e76f51', fontsize=12, fontweight='bold')
     ax2.set_ylim(0, max(prezzi)*1.3)
 
-    # Legenda combinata
-    lines, labels_ = [], []
-    for ax in [ax1, ax2]:
-        l, lab = ax.get_legend_handles_labels()
-        lines += l
-        labels_ += lab
-    ax1.legend(lines, labels_, loc='upper right')
+    # Scritta "Risparmio SPaC x %" sopra la barra verde (SPaC)
+    risparmio_perc = 100 * (classic_cost - cost) / classic_cost if classic_cost else 0
+    testo_risparmio = f"Risparmio SPaC {risparmio_perc:.1f}%"
+    # Posiziona la scritta poco sopra la barra dello SPaC (seconda barra, indice 1)
+    y_spac = cost + max(costi)*0.04  # 4% sopra la barra
+    ax1.text(1, y_spac, testo_risparmio, ha='center', va='bottom', fontsize=12, color='#2a9d8f', fontweight='bold')
+
+    # Legenda personalizzata
+    from matplotlib.patches import Patch
+    from matplotlib.lines import Line2D
+    legend_elements = [
+        Patch(facecolor='#888', edgecolor='k', label='Costo Totale PaC Classico'),
+        Patch(facecolor='#2a9d8f', edgecolor='k', label='Costo Totale SPaC'),
+        Line2D([0], [0], marker='o', color='#e76f51', label='Prezzo finale (€/MWh)', markerfacecolor='#e76f51', markeredgecolor='#222', markersize=13, linewidth=0)
+    ]
+    ax1.legend(handles=legend_elements, loc='upper right')
     return fig
 
 st.pyplot(plot_costs_and_prices())
@@ -471,6 +488,7 @@ def plot_supply_demand_curve(offers, acc, demand, market_type):
     p = [o['p'] for o in offers]
     up_labels = [o['UP'] for o in offers]
     q_cum = np.cumsum(q)
+    import matplotlib.pyplot as plt
     fig, ax = plt.subplots(figsize=(7,4))
     # Curva offerta a gradini
     prev_q = 0
@@ -508,6 +526,7 @@ def plot_supply_demand_classic(offers, accepted_classic, demand, marginal_price_
     p = [o['p'] for o in offers]
     up_labels = [o['UP'] for o in offers]
     q_cum = np.cumsum(q)
+    import matplotlib.pyplot as plt
     fig, ax = plt.subplots(figsize=(7,4))
     prev_q = 0
     for i, (q_i, price, up) in enumerate(zip(q_cum, p, up_labels)):
@@ -526,6 +545,8 @@ def plot_supply_demand_classic(offers, accepted_classic, demand, marginal_price_
 
 # --- Visualizzazione UP accettate/escluse nel mercato unico ---
 def plot_up_status_classic(offers, accepted_classic):
+    import matplotlib.pyplot as plt
+    import matplotlib.patheffects as pe
     fig, ax = plt.subplots(figsize=(8,1.7))
     # Tutte le UP su una riga
     for i, o in enumerate(offers):
