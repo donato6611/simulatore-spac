@@ -479,10 +479,11 @@ def plot_costs_and_prices():
     prezzi = [marginal_price_classic, weighted_price_spac]
     color_cost = ['#888', '#2a9d8f']
     bars = ax1.bar(labels, costi, color=color_cost, width=0.4, label='Costo Totale (€)')
-    # Etichette del costo totale con colore corrispondente alla barra
-    for i, v in enumerate(costi):
+    # Etichette del costo totale centrate sopra le barre
+    for i, bar in enumerate(bars):
+        v = bar.get_height()
         colore = color_cost[i]
-        ax1.text(i-0.15, v+50, f"{v:.0f}", ha='center', fontsize=10, color=colore, fontweight='bold')
+        ax1.text(bar.get_x() + bar.get_width()/2, v+50, f"{v:.0f}", ha='center', va='bottom', fontsize=10, color=colore, fontweight='bold')
     ax1.set_ylabel('Costo Totale (€)', color='#222')
     ax1.set_title('Confronto costo sistema e prezzo finale')
 
@@ -495,12 +496,18 @@ def plot_costs_and_prices():
     ax2.set_ylabel('Prezzo finale (€/MWh)', color='#e76f51', fontsize=12, fontweight='bold')
     ax2.set_ylim(0, max(prezzi)*1.3)
 
-    # Scritta "Risparmio SPaC x %" sopra la barra verde (SPaC)
+    # Box risparmi evidenziato con bordo nero e sfondo giallo sotto la barra SPaC
+    risparmio_euro = int(round(classic_cost - cost))
     risparmio_perc = 100 * (classic_cost - cost) / classic_cost if classic_cost else 0
-    testo_risparmio = f"Risparmio SPaC {risparmio_perc:.1f}%"
-    # Posiziona la scritta poco sopra la barra dello SPaC (seconda barra, indice 1)
-    y_spac = cost + max(costi)*0.04  # 4% sopra la barra
-    ax1.text(1, y_spac, testo_risparmio, ha='center', va='bottom', fontsize=12, color='#2a9d8f', fontweight='bold')
+    box_x = 1  # indice barra SPaC
+    box_y = cost + max(costi)*0.04
+    box_width = bars[1].get_width()*0.95
+    box_height = max(costi)*0.13
+    from matplotlib.patches import Rectangle
+    rect = Rectangle((box_x - box_width/2, box_y), box_width, box_height, linewidth=1.5, edgecolor='black', facecolor='#fff700', alpha=0.85, zorder=5)
+    ax1.add_patch(rect)
+    # Testo risparmio centrato nel box
+    ax1.text(box_x, box_y + box_height/2, f"Risparmio: {risparmio_euro} €\n({risparmio_perc:.1f}%)", ha='center', va='center', fontsize=11, color='#222', fontweight='bold', zorder=6)
 
     # Legenda personalizzata sotto il grafico a destra, con font più piccolo
     from matplotlib.patches import Patch
