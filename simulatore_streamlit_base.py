@@ -235,7 +235,7 @@ go_to_optimum = st.sidebar.button("Vai direttamente al risultato ottimizzato")
 
 st.header("1. IMPOSTA LE OFFERTE DELLE UNITA DI PRODUZIONE UP E LA DOMANDA TOTALE")
 st.markdown("""
-<span style='color:#2a9d8f'><b>Per modificare una UP, clicca direttamente sulla cella che vuoi cambiare, digita il dato e premi invio o usa i pulsanti + e -.<br>
+<span style='color:#2a9d8f'><b>Per modificare una UP, clicca direttamente sulla cella che vuoi cambiare, digita il dato e premi invio o usa i pulsanti + e -streamlit run simulatore_streamlit_base.py.<br>
 <span style='color:#e76f51'>L'aggiunta o la rimozione di UP non è consentita in questa versione.</span></b></span>
 """, unsafe_allow_html=True)
 
